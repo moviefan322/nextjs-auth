@@ -6,7 +6,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return;
   }
-  
+
   const data = req.body;
 
   const { email, password } = data;
@@ -22,15 +22,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   let client;
+  let db;
   try {
     client = await connect();
+    db = client.db();
   } catch (error) {
     res.status(500).json({ message: "Connecting to the database failed!" });
     return;
   }
 
+  const existingUser = await db.collection("users").findOne({ email: email });
+
+  if (existingUser) {
+    client.close();
+    res.status(422).json({ message: "User exists already!" });
+    return;
+  }
+
   try {
-    const db = client.db();
     const hasedPassword = await hashPassword(password);
 
     const result = await db.collection("users").insertOne({
@@ -43,6 +52,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       res.status(500).json({ message: "Inserting data failed!" });
       return;
     }
+    
   } catch (error) {
     client.close();
     res.status(500).json({ message: "Inserting data failed!" });
