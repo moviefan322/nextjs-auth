@@ -70,3 +70,9 @@
   background-color: transparent;
   color: #ae82cc;
 }
+
+.error {
+  color: #ff4d4d;
+  font-weight: bold;
+  margin: 1rem 0;
+}
